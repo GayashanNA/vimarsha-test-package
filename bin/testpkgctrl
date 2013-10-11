@@ -97,6 +97,40 @@ function show_available_programs {
 
 }
 
+function show_program_details {
+    for program_name in $program_names; do
+
+	if [[ ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
+	    echo "Cannot show details for a package. Enter a program name"
+	fi
+
+	local program_dir=${pkgdir}/${program_parent_dir[$program_name]}/$program_name
+	local program_conf_dir=$program_dir/conf
+	local inputs=""
+
+	echo "==================================================="
+	echo "Details for Program \"$program_name\""
+	echo
+
+	echo "Input types supported:"
+	for i in $(ls ${program_conf_dir}/*.buildconf); do
+	    local input_name=$(basename $i | sed 's/.buildconf//')
+	    inputs="$inputs $input_name"
+	    echo "  $input_name"
+	done
+
+	source ${program_conf_dir}/program.conf
+	echo
+	echo "Program versions available:"
+	for i in ${program_types}; do
+	    echo "  $i"
+	done
+
+	echo
+    done
+
+}
+
 function process_args {
 
     # Usage
@@ -141,15 +175,23 @@ Examples:
 # Default values used
 program_names="${pkg_alias[all]}"
 package_name="all"
+thread_list="1"
+
+show_help=""
+show_list=""
+show_details=""
 
 while [[ ! -z "$1" ]]; do
     arg="$1"
     case "$arg" in
 	"-h" )
-	    echo "$usage"
+	    show_help=true
 	    ;;
 	"-l" )
-	    show_available_programs
+	    show_list=true
+	    ;;
+	"-d" )
+	    show_details=true
 	    ;;
 	"-p" )
 	    shift; arg="$1"
@@ -171,6 +213,23 @@ done
 
 }
 
+function run_package {
+    if [ $show_help ]; then
+	echo "$usage"
+	exit 1
+    fi
+
+    if [ $show_list ]; then
+	show_available_programs
+	exit 1
+    fi
+
+    if [ $show_details ]; then
+	show_program_details
+	exit 1
+    fi
+}
+
 # Check Bash Version
 if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
   # We use certain Bash 4 features.
@@ -180,3 +239,5 @@ fi
 test_package_init
 
 process_args $@
+
+run_package
