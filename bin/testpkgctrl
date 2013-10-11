@@ -3,7 +3,7 @@
 # Globla declarations
 declare -A program_parent_dir
 declare -A pkg_alias
-
+GCC=gcc
 
 function test_package_init {
     # Determine script name
@@ -97,6 +97,19 @@ function show_available_programs {
 
 }
 
+function read_program_input_types {
+    local program_name=$1
+    local program_dir=${pkgdir}/${program_parent_dir[$program_name]}/$program_name
+    local program_conf_dir=$program_dir/conf
+    program_input_types=""
+
+    for i in $(ls ${program_conf_dir}/*.buildconf); do
+	local input_name=$(basename $i | sed 's/.buildconf//')
+	program_input_types="$program_input_types $input_name"
+    done
+
+}
+
 function show_program_details {
     for program_name in $program_names; do
 
@@ -131,6 +144,14 @@ function show_program_details {
 
 }
 
+function check_args_left {
+    arg="$1"
+    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+	echo "$usage"
+	exit 1
+    fi
+}
+
 function process_args {
 
     # Usage
@@ -150,6 +171,8 @@ Options:
   -t TYPE	- A list of program types (good, badfs, badma)
 
   -n THREADS	- A list of thread numbers to be run with programs
+
+  -e EVENTS     - List of events used with perf to collect data
 
   -a ACTION	- Data collections type
 
@@ -176,6 +199,7 @@ Examples:
 program_names="${pkg_alias[all]}"
 package_name="all"
 thread_list="1"
+perf_exec=perf
 
 show_help=""
 show_list=""
@@ -201,6 +225,17 @@ while [[ ! -z "$1" ]]; do
 	    fi
 
 	    check_program_alias_valid $arg
+	    ;;
+	"--perf-binary")
+	    shift; arg="$1"
+	    check_args_left $arg
+
+	    if [ -f "$arg" ]; then
+		perf_exec=$arg
+	    else
+		echo "Error no file at $arg"
+		exit 1
+	    fi
 	    ;;
 	* )
 	    echo "$usage"
@@ -228,6 +263,45 @@ function run_package {
 	show_program_details
 	exit 1
     fi
+
+    test_package_build_dir=$TEST_PACKAGE_BASE_DIR/build
+    if [ ! -d "$test_package_build_dir" ]; then
+	mkdir -p $test_package_build_dir
+    fi
+
+    # Run each program with given constraints
+    for program_name in $program_names; do
+	local program_dir=${pkgdir}/${program_parent_dir[$program_name]}/$program_name
+	local program_build_dir=${test_package_build_dir}/$program_name
+	local program_conf_dir=$program_dir/conf
+
+	if [ ! -d $program_build_dir ]; then
+	    mkdir -p $program_build_dir
+	fi
+
+	# Copy src file to buid directory
+	cp -r ${program_dir}/src/* $program_build_dir
+
+	# Read program versions supported
+	source $program_conf_dir/program.conf
+	BUILDDIR=$program_build_dir
+
+	read_program_input_types $program_name
+	for program_input_type in $program_input_types; do
+	    for thread_num in $thread_list; do
+		NTHREADS=$thread_num
+		for program_type in $program_types; do
+		    PROGVER=$program_type
+		    EXECNAME=${BUILDDIR}/${program_name}-${PROGVER}
+
+		    source ${program_conf_dir}/${program_input_type}.buildconf
+		    $build_command
+		    $perf_exec stat -x: $exec_command
+		done
+	    done
+	done
+    done
+
 }
 
 # Check Bash Version
