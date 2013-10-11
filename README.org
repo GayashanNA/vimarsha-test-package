@@ -1,0 +1,64 @@
+* File structure
+
+- pkgs
+  - falseshare
+    - counting
+      - src
+	- counting.c
+      - conf
+	- small.buildconf
+	- medium.buildconf
+	- large.buildconf
+	- program.conf - Include details about supported input types and
+	  program types
+
+    - psumscalar
+    - false1
+    - padding
+    - pmatrixcompare
+    - psumvector
+    - pdotproduct
+    - pmatrixmult
+
+  - sequential
+    - read
+    - write
+    - dotproduct
+    - matrixmultiply
+    - readmodifywrite
+    - swap
+
+* Options
++ -p PACKAGE - A list of packages or aliases on which the action is to
+  be performed.
+
++ -l - list all available programs
+
++ -d - show information for a given program or alias
+
++ -t TYPE - A list of program types (good, badfs, badma)
+
++ -n THREADS - A list of thread numbers to be run with programs
+
++ -e EVENTS     - List of events used with perf to collect data
+
++ -a ACTION - Data collections type
+
++ -o OUTPUT - Name of the output file
+
++ --perf-binary PERF_LOCATION - location of perf
+
++ -h - Displays this help message.
+
+* Actions
+- default - Normal perf data collection
+- functional - use function wise perf data collection
+
+* Examples
+- testctrl -p ALL -n 1,2,4,8
+
+- testctrl -p falseshare -n 1,2,4,8 -a functional
+
+- testctrl -p swap -d
+
+- testctrl -p swap -n 2,4 -t good,badfs
