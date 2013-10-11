@@ -5,6 +5,9 @@ function detect_path {
     
     if [ -f "./${uniquefile}" ]; then
         xxTEST_PACKAGE_DIRxx=$(pwd)
+    else
+	echo "Please go to the TEST PACKAGE DIRECTORY when sourcing env.sh"
+	exit 1
     fi
 }
 
@@ -16,3 +19,5 @@ if [ -z "${PATH}" ]; then
 else
   export PATH=${PATH}:${xxTEST_PACKAGE_DIRxx}/bin
 fi
+
+echo "Environment setup successful!"

@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+
+function test_package_init {
+    # Determine script name
+    me=$(basename $0)
+
+    # Try to autodetect path by looking at path used to invoke this script
+    local uniquefile=".test_package_uniquefile"
+
+    if [ "${0:0:1}" == "/" ]; then
+	# Absolute path given
+	test_package_base_dir=$(dirname $(dirname $0))
+    else
+	# Relative path given
+	local script_absolute_path="$(pwd)/${0:1}"
+	test_package_base_dir=$(dirname $(dirname $script_absolute_path))
+    fi
+
+    # Check if correct directory is detected
+    if [ -f "${test_package_base_dir}/${uniquefile}" ]; then
+	    TEST_PACKAGE_BASE_DIR=${test_package_base_dir}
+    fi
+
+    # Make sure TEST_PACKAGE_BASE_DIR is defined and exported
+    if [ -z "${TEST_PACKAGE_BASE_DIR}" ]; then
+	echo "Error: Unable to autodetect path to the test package directory "
+	exit 1
+    fi
+    export TEST_PACKAGE_BASE_DIR
+
+    pkgdir=${test_package_base_dir}/pkgs
+
+    declare -A program_parent_dir
+
+    declare -A pkg_alias
+    pkg_alias[all]=""
+
+    for i in $(ls -d ${pkgdir}/*/); do
+	local pkg_name=$(basename $i)
+	pkg_alias["$pkg_name"]=""
+
+	if [ "$(ls -A $i)" ]; then
+	    for j in $(ls -d ${i}*/); do
+		local program_name=$(basename $j)
+		pkg_alias["$pkg_name"]="${pkg_alias[${pkg_name}]} $program_name"
+
+		program_parent_dir["$program_name"]="$pkg_name"
+	    done
+	    pkg_alias["$pkg_name"]="${pkg_alias[${pkg_name}]:1}"
+
+	    if [ -z "${pkg_alias[all]}" ]; then
+		pkg_alias[all]="${pkg_alias[${pkg_name}]}"
+	    else
+		pkg_alias[all]="${pkg_alias[all]} ${pkg_alias[${pkg_name}]}"
+	    fi
+	fi
+    done
+}
+
+
+# Check Bash Version
+if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+  # We use certain Bash 4 features.
+  echo "Warning: At least bash version 4 is recommended. Current version is $BASH_VERSION."
+fi
+
+test_package_init
