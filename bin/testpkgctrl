@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Globla declarations
+declare -A program_parent_dir
+declare -A pkg_alias
+
 
 function test_package_init {
     # Determine script name
@@ -31,9 +35,6 @@ function test_package_init {
 
     pkgdir=${test_package_base_dir}/pkgs
 
-    declare -A program_parent_dir
-
-    declare -A pkg_alias
     pkg_alias[all]=""
 
     for i in $(ls -d ${pkgdir}/*/); do
@@ -56,8 +57,119 @@ function test_package_init {
 	    fi
 	fi
     done
+
 }
 
+function check_program_alias_valid {
+    program_names=""
+
+    local prog_names=$(echo $1 | sed 's/,/ /g')
+
+    for program_name in $prog_names; do
+	if ! [[ ${pkg_alias[all]} =~ (^| )$program_name($| ) ||
+		    ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
+	    echo "Error: Wrong package name \"$program_name\""
+	    exit 1
+	fi
+
+	if [[ ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
+	    program_names="$program_names ${pkg_alias[$program_name]}"
+	else
+	    program_names="$program_names $program_name"
+	fi
+    done
+
+    # remove duplicates from program list
+    program_names=$(echo "$program_names" | xargs -n1 | awk ' !x[$0]++' | xargs)
+}
+
+function show_available_programs {
+    echo "Programs for given package input:"
+    for program in ${program_names}; do
+	echo "  $program"
+    done
+
+    echo
+    echo "Aliases available in the package:"
+    for program_alias in ${!pkg_alias[@]}; do
+	echo "  $program_alias"
+    done
+
+}
+
+function process_args {
+
+    # Usage
+    usage="\
+Usage $me -p PACKAGE [OPTIONS]...
+
+Manage the perf data collection using test programs
+
+Options:
+  -p PACKAGE	- A list of packages or aliases on which the action is to
+		  be performed.
+
+  -l		- list all available programs
+
+  -d		- show information for a given program or alias
+
+  -t TYPE	- A list of program types (good, badfs, badma)
+
+  -n THREADS	- A list of thread numbers to be run with programs
+
+  -a ACTION	- Data collections type
+
+  -o OUTPUT	- Name of the output file
+
+  --perf-binary PERF_LOCATION - location of perf
+
+  -h		- Displays this help message.
+
+Actions:
+  default	- Normal perf data collection
+  functional	- use function wise perf data collection
+
+Examples:
+  $me -p all -n 1,2,4,8
+
+  $me -p falseshare -n 1,2,4,8 -a functional
+
+  $me -p swap -d
+
+  $me -p swap -n 2,4 -t good,badfs"
+
+# Default values used
+program_names="${pkg_alias[all]}"
+package_name="all"
+
+while [[ ! -z "$1" ]]; do
+    arg="$1"
+    case "$arg" in
+	"-h" )
+	    echo "$usage"
+	    ;;
+	"-l" )
+	    show_available_programs
+	    ;;
+	"-p" )
+	    shift; arg="$1"
+	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+		echo "$usage"
+		exit 1
+	    fi
+
+	    check_program_alias_valid $arg
+	    ;;
+	* )
+	    echo "$usage"
+	    exit 1
+	    ;;
+    esac
+
+    shift
+done
+
+}
 
 # Check Bash Version
 if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
@@ -66,3 +178,5 @@ if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
 fi
 
 test_package_init
+
+process_args $@
