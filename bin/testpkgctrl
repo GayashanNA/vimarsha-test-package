@@ -274,10 +274,32 @@ function run_package {
 	exit 1
     fi
 
+    if [ ! -f $perf_exec ]; then
+	echo -e "ERROR: Perf location not detected\n"
+	echo "$usage"
+	exit 1
+    fi
+
     test_package_build_dir=$TEST_PACKAGE_BASE_DIR/build
     if [ ! -d "$test_package_build_dir" ]; then
 	mkdir -p $test_package_build_dir
     fi
+
+    local temp_file=perf_test.out
+    $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 1> $temp_file 0>&2 2> /dev/null
+
+    if [ -s $temp_file ]; then
+	perf_out_stream=1
+    else
+	$perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 2> $temp_file 0>&1 1> /dev/null
+	if [ -s $temp_file ]; then
+	    perf_out_stream=2
+	else
+	    perf_out_stream=0
+	fi
+    fi
+    rm $temp_file
+    echo $perf_out_stream
 
     echo "Data collection started"
     echo -e "# Output file generated using $me \n" > $output_filename
@@ -311,7 +333,8 @@ function run_package {
 
 		    echo -e "\n# Program:${program_name},Threads:${thread_num},Type:${program_type},Input:${program_input_type}" >> $output_filename
 		    $build_command
-		    $perf_exec stat -x: $exec_command 2>> $output_filename > /dev/null
+		    perf_command="$perf_exec stat -x: $exec_command $perf_out_stream>> $output_filename > /dev/null"
+		    eval $perf_command
 		done
 	    done
 	done
