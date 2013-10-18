@@ -6,12 +6,17 @@ function detect_path {
     if [ -f "./${uniquefile}" ]; then
         xxTEST_PACKAGE_DIRxx=$(pwd)
     else
+	detection_failed=true
 	echo "Please go to the TEST PACKAGE DIRECTORY when sourcing env.sh"
-	exit 1
     fi
 }
 
 detect_path
+
+if [ ! -z $detection_failed ]; then
+    unset detection_failed
+    return
+fi
 
 # Append `bin/' directory to PATH
 if [ -z "${PATH}" ]; then
