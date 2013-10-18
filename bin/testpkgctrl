@@ -200,6 +200,7 @@ program_names="${pkg_alias[all]}"
 package_name="all"
 thread_list="1"
 perf_exec=perf
+output_filename="perf.out"
 
 show_help=""
 show_list=""
@@ -216,6 +217,15 @@ while [[ ! -z "$1" ]]; do
 	    ;;
 	"-d" )
 	    show_details=true
+	    ;;
+	"-o" )
+	    shift; arg="$1"
+	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+		echo "$usage"
+		exit 1
+	    fi
+
+	    output_filename=$arg
 	    ;;
 	"-p" )
 	    shift; arg="$1"
@@ -269,6 +279,9 @@ function run_package {
 	mkdir -p $test_package_build_dir
     fi
 
+    echo "Data collection started"
+    echo -e "# Output file generated using $me \n" > $output_filename
+
     # Run each program with given constraints
     for program_name in $program_names; do
 	local program_dir=${pkgdir}/${program_parent_dir[$program_name]}/$program_name
@@ -295,13 +308,16 @@ function run_package {
 		    EXECNAME=${BUILDDIR}/${program_name}-${PROGVER}
 
 		    source ${program_conf_dir}/${program_input_type}.buildconf
+
+		    echo -e "\n# Program:${program_name},Threads:${thread_num},Type:${program_type},Input:${program_input_type}" >> $output_filename
 		    $build_command
-		    $perf_exec stat -x: $exec_command
+		    $perf_exec stat -x: $exec_command 2>> $output_filename > /dev/null
 		done
 	    done
 	done
     done
 
+    echo "Data collection finished"
 }
 
 # Check Bash Version
