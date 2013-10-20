@@ -83,6 +83,21 @@ function check_program_alias_valid {
     program_names=$(echo "$program_names" | xargs -n1 | awk ' !x[$0]++' | xargs)
 }
 
+function check_thread_list_valid {
+    thread_list=""
+
+    local tlist=$(echo $1 | sed 's/,/ /g')
+
+    for num in $tlist; do
+	if [[ $num =~ ^[0-9]+$ ]]; then
+	    thread_list="$thread_list $num"
+	else
+	    echo "Thread number '$num' is invalid."
+	    exit 1
+	fi
+    done
+}
+
 function show_available_programs {
     echo "Programs for given package input:"
     for program in ${program_names}; do
@@ -227,6 +242,15 @@ while [[ ! -z "$1" ]]; do
 
 	    output_filename=$arg
 	    ;;
+	"-n" )
+	    shift; arg="$1"
+	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+		echo "$usage"
+		exit 1
+	    fi
+
+	    check_thread_list_valid $arg
+	    ;;
 	"-p" )
 	    shift; arg="$1"
 	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
@@ -299,7 +323,6 @@ function run_package {
 	fi
     fi
     rm $temp_file
-    echo $perf_out_stream
 
     echo "Data collection started"
     echo -e "# Output file generated using $me \n" > $output_filename
