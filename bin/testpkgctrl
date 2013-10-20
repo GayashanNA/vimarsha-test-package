@@ -298,7 +298,9 @@ function run_package {
 	exit 1
     fi
 
-    if [ ! -f $perf_exec ]; then
+    # Check perf binary is valid
+    which perf > /dev/null 2>&1
+    if [ "$?" -gt 0 ]; then
 	echo -e "ERROR: Perf location not detected\n"
 	echo "$usage"
 	exit 1
