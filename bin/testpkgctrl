@@ -98,6 +98,10 @@ function check_thread_list_valid {
     done
 }
 
+function check_event_list_valid {
+    event_list=$(echo $1 | sed 's/,/ /g')
+}
+
 function show_available_programs {
     echo "Programs for given package input:"
     for program in ${program_names}; do
@@ -214,6 +218,7 @@ Examples:
 program_names="${pkg_alias[all]}"
 package_name="all"
 thread_list="1"
+event_list=""
 perf_exec=perf
 output_filename="perf.out"
 
@@ -250,6 +255,15 @@ while [[ ! -z "$1" ]]; do
 	    fi
 
 	    check_thread_list_valid $arg
+	    ;;
+	"-e" )
+	    shift; arg="$1"
+	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+		echo "$usage"
+		exit 1
+	    fi
+
+	    check_event_list_valid $arg
 	    ;;
 	"-p" )
 	    shift; arg="$1"
@@ -299,7 +313,7 @@ function run_package {
     fi
 
     # Check perf binary is valid
-    which perf > /dev/null 2>&1
+    which $perf_exec > /dev/null 2>&1
     if [ "$?" -gt 0 ]; then
 	echo -e "ERROR: Perf location not detected\n"
 	echo "$usage"
@@ -346,6 +360,12 @@ function run_package {
 	source $program_conf_dir/program.conf
 	BUILDDIR=$program_build_dir
 
+	# Preparing perf command
+	perf_with_options="$perf_exec stat -x:"
+	if [ ! -z $event_list ]; then
+	    perf_with_options="${perf_with_options} -e $event_list"
+	fi
+
 	read_program_input_types $program_name
 	for program_input_type in $program_input_types; do
 	    for thread_num in $thread_list; do
@@ -358,7 +378,7 @@ function run_package {
 
 		    echo -e "\n# Program:${program_name},Threads:${thread_num},Type:${program_type},Input:${program_input_type}" >> $output_filename
 		    $build_command
-		    perf_command="$perf_exec stat -x: $exec_command $perf_out_stream>> $output_filename > /dev/null"
+		    perf_command="$perf_with_options $exec_command $perf_out_stream>> $output_filename > /dev/null"
 		    eval $perf_command
 		done
 	    done
