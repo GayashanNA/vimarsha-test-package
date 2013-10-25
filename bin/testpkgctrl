@@ -384,15 +384,20 @@ function run_package {
 
 	# Prepare input types
 	read_program_input_types $program_name
-	filtered_input_list=""
 
-	for input_t in $input_list; do
-	    for program_input_type in $program_input_types; do
-		if [ "$input_t" == "$program_input_type" ]; then
-		    filtered_input_list="$filtered_input_list $input_t"
-		fi
+	if [ ! -z $input_list ]; then
+	    filtered_input_list=""
+
+	    for input_t in $input_list; do
+		for program_input_type in $program_input_types; do
+		    if [ "$input_t" == "$program_input_type" ]; then
+			filtered_input_list="$filtered_input_list $input_t"
+		    fi
+		done
 	    done
-	done
+	else
+	    filtered_input_list=$program_input_types
+	fi
 
 	for program_input_type in $filtered_input_list; do
 	    for thread_num in $thread_list; do
