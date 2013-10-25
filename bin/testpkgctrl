@@ -102,6 +102,10 @@ function check_event_list_valid {
     event_list=$(echo $1 | sed 's/,/ /g')
 }
 
+function check_input_list_valid {
+    input_list=$(echo $1 | sed 's/,/ /g')
+}
+
 function show_available_programs {
     echo "Programs for given package input:"
     for program in ${program_names}; do
@@ -195,6 +199,8 @@ Options:
 
   -a ACTION	- Data collections type
 
+  -i INPUTS     - A list of input types
+
   -o OUTPUT	- Name of the output file
 
   --perf-binary PERF_LOCATION - location of perf
@@ -218,6 +224,7 @@ Examples:
 program_names="${pkg_alias[all]}"
 package_name="all"
 thread_list="1"
+input_list=""
 event_list=""
 perf_exec=perf
 output_filename="perf.out"
@@ -255,6 +262,15 @@ while [[ ! -z "$1" ]]; do
 	    fi
 
 	    check_thread_list_valid $arg
+	    ;;
+	"-i" )
+	    shift; arg="$1"
+	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+		echo "$usage"
+		exit 1
+	    fi
+
+	    check_input_list_valid $arg
 	    ;;
 	"-e" )
 	    shift; arg="$1"
@@ -366,8 +382,19 @@ function run_package {
 	    perf_with_options="${perf_with_options} -e $event_list"
 	fi
 
+	# Prepare input types
 	read_program_input_types $program_name
-	for program_input_type in $program_input_types; do
+	filtered_input_list=""
+
+	for input_t in $input_list; do
+	    for program_input_type in $program_input_types; do
+		if [ "$input_t" == "$program_input_type" ]; then
+		    filtered_input_list="$filtered_input_list $input_t"
+		fi
+	    done
+	done
+
+	for program_input_type in $filtered_input_list; do
 	    for thread_num in $thread_list; do
 		NTHREADS=$thread_num
 		for program_type in $program_types; do
