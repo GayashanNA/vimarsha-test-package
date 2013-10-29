@@ -106,6 +106,18 @@ function check_input_list_valid {
     input_list=$(echo $1 | sed 's/,/ /g')
 }
 
+function check_action_valid {
+    t_action=$1
+
+    if [[ "$t_action" == "default" || "$t_action" == "functional" ]]; then
+	action=$t_action
+    else
+	echo "ERROR: Invalid action (${t_action})"
+	echo "$usage"
+	exit 1
+    fi
+}
+
 function show_available_programs {
     echo "Programs for given package input:"
     for program in ${program_names}; do
@@ -226,6 +238,7 @@ package_name="all"
 thread_list="1"
 input_list=""
 event_list=""
+action="default"
 perf_exec=perf
 output_filename="perf.out"
 
@@ -253,6 +266,15 @@ while [[ ! -z "$1" ]]; do
 	    fi
 
 	    output_filename=$arg
+	    ;;
+	"-a" )
+	    shift; arg="$1"
+	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+		echo "$usage"
+		exit 1
+	    fi
+
+	    check_action_valid $arg
 	    ;;
 	"-n" )
 	    shift; arg="$1"
@@ -377,7 +399,12 @@ function run_package {
 	BUILDDIR=$program_build_dir
 
 	# Preparing perf command
-	perf_with_options="$perf_exec stat -x:"
+	if [[ $action == "default" ]]; then
+	    perf_with_options="$perf_exec stat -x:"
+	elif [[ $action == "functional" ]]; then
+	    perf_with_options="$perf_exec record"
+	fi
+
 	if [ ! -z $event_list ]; then
 	    perf_with_options="${perf_with_options} -e $event_list"
 	fi
@@ -410,8 +437,17 @@ function run_package {
 
 		    echo -e "\n# Program:${program_name},Threads:${thread_num},Type:${program_type},Input:${program_input_type}" >> $output_filename
 		    $build_command
-		    perf_command="$perf_with_options $exec_command $perf_out_stream>> $output_filename > /dev/null"
-		    eval $perf_command
+
+		    if [[ $action == "default" ]]; then
+			perf_command="$perf_with_options $exec_command $perf_out_stream>> $output_filename > /dev/null"
+			eval $perf_command
+		    elif [[ $action == "functional" ]]; then
+			# perf_command="$perf_with_options $exec_command $perf_out_stream>&1 > /dev/null"
+			perf_command="$perf_with_options $exec_command > /dev/null $perf_out_stream>&1"
+			eval $perf_command
+			perf_command="$perf_exec report -t : >> $output_filename ${perf_out_stream}>&1"
+			eval $perf_command
+		    fi
 		done
 	    done
 	done
