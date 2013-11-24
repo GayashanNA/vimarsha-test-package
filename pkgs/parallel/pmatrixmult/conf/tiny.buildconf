@@ -1,0 +1,4 @@
+
+build_command="$GCC -D${PROGVER} -DN=300 ${BUILDDIR}/pmatrixmult.c -lpthread -lrt -o ${EXECNAME}"
+
+exec_command="${EXECNAME} $NTHREADS"
