@@ -1,0 +1,4 @@
+
+build_command="$GCC -D${PROGVER} -DN=4000 -DREPEAT=5 ${BUILDDIR}/pmatrixcompare.c -lpthread -lrt -o ${EXECNAME}"
+
+exec_command="${EXECNAME} $NTHREADS"
