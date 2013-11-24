@@ -1,0 +1,4 @@
+
+build_command="$GCC -D${PROGVER} -DN=67108864 -DREPEAT=7 -DTYPE=double ${BUILDDIR}/readmodifywrite.c -lrt -o ${EXECNAME}"
+
+exec_command="${EXECNAME} $NTHREADS"
