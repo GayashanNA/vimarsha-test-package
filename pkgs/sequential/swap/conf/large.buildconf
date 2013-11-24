@@ -1,0 +1,4 @@
+
+build_command="$GCC -D${PROGVER} -DN=8388608 -DREPEAT=7 -DTYPE=double ${BUILDDIR}/swap.c -lrt -o ${EXECNAME}"
+
+exec_command="${EXECNAME} $NTHREADS"
