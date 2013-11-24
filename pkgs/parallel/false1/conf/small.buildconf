@@ -1,0 +1,4 @@
+
+build_command="$GCC -D${PROGVER} -DN=2000000 -DREPEAT=100 ${BUILDDIR}/false1.c -lpthread -lrt -o ${EXECNAME}"
+
+exec_command="${EXECNAME} $NTHREADS"
