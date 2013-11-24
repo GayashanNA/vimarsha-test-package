@@ -26,14 +26,14 @@
 						{ perror("clock_gettime( ):"); exit(EXIT_FAILURE); }
 #ifdef 	GOOD
 #define 	MSG 	"# PCount: Good   : N=%d : Threads=%d : CompTime(ms)=%.2f : CompTime/TotalTime=%.1f%%\n"
+#define	STRIDE	127
 #endif
 #ifdef 	BAD_MA
 #define 	MSG 	"# PCount: Bad-MA : N=%d : Threads=%d : CompTime(ms)=%.2f : CompTime/TotalTime=%.1f%%\n"
+#define	STRIDE	31
 #endif
 #ifdef	BAD_FS
 #define 	MSG 	"# PCount: Bad-FS : N=%d : Threads=%d : CompTime(ms)=%.2f : CompTime/TotalTime=%.1f%%\n"
-#endif
-#ifndef 	STRIDE
 #define	STRIDE	127
 #endif
 

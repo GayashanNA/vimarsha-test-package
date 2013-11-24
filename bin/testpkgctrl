@@ -13,23 +13,23 @@ function test_package_init {
     local uniquefile=".test_package_uniquefile"
 
     if [ "${0:0:1}" == "/" ]; then
-	# Absolute path given
-	test_package_base_dir=$(dirname $(dirname $0))
+        # Absolute path given
+        test_package_base_dir=$(dirname $(dirname $0))
     else
-	# Relative path given
-	local script_absolute_path="$(pwd)/${0:1}"
-	test_package_base_dir=$(dirname $(dirname $script_absolute_path))
+        # Relative path given
+        local script_absolute_path="$(pwd)/${0:1}"
+        test_package_base_dir=$(dirname $(dirname $script_absolute_path))
     fi
 
     # Check if correct directory is detected
     if [ -f "${test_package_base_dir}/${uniquefile}" ]; then
-	    TEST_PACKAGE_BASE_DIR=${test_package_base_dir}
+            TEST_PACKAGE_BASE_DIR=${test_package_base_dir}
     fi
 
     # Make sure TEST_PACKAGE_BASE_DIR is defined and exported
     if [ -z "${TEST_PACKAGE_BASE_DIR}" ]; then
-	echo "Error: Unable to autodetect path to the test package directory "
-	exit 1
+        echo "Error: Unable to autodetect path to the test package directory "
+        exit 1
     fi
     export TEST_PACKAGE_BASE_DIR
 
@@ -38,24 +38,24 @@ function test_package_init {
     pkg_alias[all]=""
 
     for i in $(ls -d ${pkgdir}/*/); do
-	local pkg_name=$(basename $i)
-	pkg_alias["$pkg_name"]=""
+        local pkg_name=$(basename $i)
+        pkg_alias["$pkg_name"]=""
 
-	if [ "$(ls -A $i)" ]; then
-	    for j in $(ls -d ${i}*/); do
-		local program_name=$(basename $j)
-		pkg_alias["$pkg_name"]="${pkg_alias[${pkg_name}]} $program_name"
+        if [ "$(ls -A $i)" ]; then
+            for j in $(ls -d ${i}*/); do
+                local program_name=$(basename $j)
+                pkg_alias["$pkg_name"]="${pkg_alias[${pkg_name}]} $program_name"
 
-		program_parent_dir["$program_name"]="$pkg_name"
-	    done
-	    pkg_alias["$pkg_name"]="${pkg_alias[${pkg_name}]:1}"
+                program_parent_dir["$program_name"]="$pkg_name"
+            done
+            pkg_alias["$pkg_name"]="${pkg_alias[${pkg_name}]:1}"
 
-	    if [ -z "${pkg_alias[all]}" ]; then
-		pkg_alias[all]="${pkg_alias[${pkg_name}]}"
-	    else
-		pkg_alias[all]="${pkg_alias[all]} ${pkg_alias[${pkg_name}]}"
-	    fi
-	fi
+            if [ -z "${pkg_alias[all]}" ]; then
+                pkg_alias[all]="${pkg_alias[${pkg_name}]}"
+            else
+                pkg_alias[all]="${pkg_alias[all]} ${pkg_alias[${pkg_name}]}"
+            fi
+        fi
     done
 
 }
@@ -66,17 +66,17 @@ function check_program_alias_valid {
     local prog_names=$(echo $1 | sed 's/,/ /g')
 
     for program_name in $prog_names; do
-	if ! [[ ${pkg_alias[all]} =~ (^| )$program_name($| ) ||
-		    ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
-	    echo "Error: Wrong package name \"$program_name\""
-	    exit 1
-	fi
+        if ! [[ ${pkg_alias[all]} =~ (^| )$program_name($| ) ||
+                    ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
+            echo "Error: Wrong package name \"$program_name\""
+            exit 1
+        fi
 
-	if [[ ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
-	    program_names="$program_names ${pkg_alias[$program_name]}"
-	else
-	    program_names="$program_names $program_name"
-	fi
+        if [[ ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
+            program_names="$program_names ${pkg_alias[$program_name]}"
+        else
+            program_names="$program_names $program_name"
+        fi
     done
 
     # remove duplicates from program list
@@ -89,17 +89,17 @@ function check_thread_list_valid {
     local tlist=$(echo $1 | sed 's/,/ /g')
 
     for num in $tlist; do
-	if [[ $num =~ ^[0-9]+$ ]]; then
-	    thread_list="$thread_list $num"
-	else
-	    echo "Thread number '$num' is invalid."
-	    exit 1
-	fi
+        if [[ $num =~ ^[0-9]+$ ]]; then
+            thread_list="$thread_list $num"
+        else
+            echo "Thread number '$num' is invalid."
+            exit 1
+        fi
     done
 }
 
 function check_event_list_valid {
-    event_list=$(echo $1 | sed 's/,/ /g')
+    event_list=$1
 }
 
 function check_input_list_valid {
@@ -110,24 +110,24 @@ function check_action_valid {
     t_action=$1
 
     if [[ "$t_action" == "default" || "$t_action" == "functional" ]]; then
-	action=$t_action
+        action=$t_action
     else
-	echo "ERROR: Invalid action (${t_action})"
-	echo "$usage"
-	exit 1
+        echo "ERROR: Invalid action (${t_action})"
+        echo "$usage"
+        exit 1
     fi
 }
 
 function show_available_programs {
     echo "Programs for given package input:"
     for program in ${program_names}; do
-	echo "  $program"
+        echo "  $program"
     done
 
     echo
     echo "Aliases available in the package:"
     for program_alias in ${!pkg_alias[@]}; do
-	echo "  $program_alias"
+        echo "  $program_alias"
     done
 
 }
@@ -139,8 +139,8 @@ function read_program_input_types {
     program_input_types=""
 
     for i in $(ls ${program_conf_dir}/*.buildconf); do
-	local input_name=$(basename $i | sed 's/.buildconf//')
-	program_input_types="$program_input_types $input_name"
+        local input_name=$(basename $i | sed 's/.buildconf//')
+        program_input_types="$program_input_types $input_name"
     done
 
 }
@@ -148,33 +148,33 @@ function read_program_input_types {
 function show_program_details {
     for program_name in $program_names; do
 
-	if [[ ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
-	    echo "Cannot show details for a package. Enter a program name"
-	fi
+        if [[ ${!pkg_alias[@]} =~ (^| )$program_name($| ) ]]; then
+            echo "Cannot show details for a package. Enter a program name"
+        fi
 
-	local program_dir=${pkgdir}/${program_parent_dir[$program_name]}/$program_name
-	local program_conf_dir=$program_dir/conf
-	local inputs=""
+        local program_dir=${pkgdir}/${program_parent_dir[$program_name]}/$program_name
+        local program_conf_dir=$program_dir/conf
+        local inputs=""
 
-	echo "==================================================="
-	echo "Details for Program \"$program_name\""
-	echo
+        echo "==================================================="
+        echo "Details for Program \"$program_name\""
+        echo
 
-	echo "Input types supported:"
-	for i in $(ls ${program_conf_dir}/*.buildconf); do
-	    local input_name=$(basename $i | sed 's/.buildconf//')
-	    inputs="$inputs $input_name"
-	    echo "  $input_name"
-	done
+        echo "Input types supported:"
+        for i in $(ls ${program_conf_dir}/*.buildconf); do
+            local input_name=$(basename $i | sed 's/.buildconf//')
+            inputs="$inputs $input_name"
+            echo "  $input_name"
+        done
 
-	source ${program_conf_dir}/program.conf
-	echo
-	echo "Program versions available:"
-	for i in ${program_types}; do
-	    echo "  $i"
-	done
+        source ${program_conf_dir}/program.conf
+        echo
+        echo "Program versions available:"
+        for i in ${program_types}; do
+            echo "  $i"
+        done
 
-	echo
+        echo
     done
 
 }
@@ -182,8 +182,8 @@ function show_program_details {
 function check_args_left {
     arg="$1"
     if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
-	echo "$usage"
-	exit 1
+        echo "$usage"
+        exit 1
     fi
 }
 
@@ -197,7 +197,7 @@ Manage the perf data collection using test programs
 
 Options:
   -p PACKAGE	- A list of packages or aliases on which the action is to
-		  be performed.
+                  be performed.
 
   -l		- list all available programs
 
@@ -249,84 +249,84 @@ show_details=""
 while [[ ! -z "$1" ]]; do
     arg="$1"
     case "$arg" in
-	"-h" )
-	    show_help=true
-	    ;;
-	"-l" )
-	    show_list=true
-	    ;;
-	"-d" )
-	    show_details=true
-	    ;;
-	"-o" )
-	    shift; arg="$1"
-	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
-		echo "$usage"
-		exit 1
-	    fi
+        "-h" )
+            show_help=true
+            ;;
+        "-l" )
+            show_list=true
+            ;;
+        "-d" )
+            show_details=true
+            ;;
+        "-o" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
 
-	    output_filename=$arg
-	    ;;
-	"-a" )
-	    shift; arg="$1"
-	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
-		echo "$usage"
-		exit 1
-	    fi
+            output_filename=$arg
+            ;;
+        "-a" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
 
-	    check_action_valid $arg
-	    ;;
-	"-n" )
-	    shift; arg="$1"
-	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
-		echo "$usage"
-		exit 1
-	    fi
+            check_action_valid $arg
+            ;;
+        "-n" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
 
-	    check_thread_list_valid $arg
-	    ;;
-	"-i" )
-	    shift; arg="$1"
-	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
-		echo "$usage"
-		exit 1
-	    fi
+            check_thread_list_valid $arg
+            ;;
+        "-i" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
 
-	    check_input_list_valid $arg
-	    ;;
-	"-e" )
-	    shift; arg="$1"
-	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
-		echo "$usage"
-		exit 1
-	    fi
+            check_input_list_valid $arg
+            ;;
+        "-e" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
 
-	    check_event_list_valid $arg
-	    ;;
-	"-p" )
-	    shift; arg="$1"
-	    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
-		echo "$usage"
-		exit 1
-	    fi
+            check_event_list_valid $arg
+            ;;
+        "-p" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
 
-	    check_program_alias_valid $arg
-	    ;;
-	"--perf-binary")
-	    shift; arg="$1"
-	    check_args_left $arg
+            check_program_alias_valid $arg
+            ;;
+        "--perf-binary")
+            shift; arg="$1"
+            check_args_left $arg
 
-	    if [ -f "$arg" ]; then
-		perf_exec=$arg
-	    else
-		echo "Error no file at $arg"
-		exit 1
-	    fi
-	    ;;
-	* )
-	    echo "$usage"
-	    exit 1
-	    ;;
+            if [ -f "$arg" ]; then
+                perf_exec=$arg
+            else
+                echo "Error no file at $arg"
+                exit 1
+            fi
+            ;;
+        * )
+            echo "$usage"
+            exit 1
+            ;;
     esac
 
     shift
@@ -336,121 +336,126 @@ done
 
 function run_package {
     if [ $show_help ]; then
-	echo "$usage"
-	exit 1
+        echo "$usage"
+        exit 1
     fi
 
     if [ $show_list ]; then
-	show_available_programs
-	exit 1
+        show_available_programs
+        exit 1
     fi
 
     if [ $show_details ]; then
-	show_program_details
-	exit 1
+        show_program_details
+        exit 1
     fi
 
     # Check perf binary is valid
     which $perf_exec > /dev/null 2>&1
     if [ "$?" -gt 0 ]; then
-	echo -e "ERROR: Perf location not detected\n"
-	echo "$usage"
-	exit 1
+        echo -e "ERROR: Perf location not detected\n"
+        echo "$usage"
+        exit 1
     fi
 
     test_package_build_dir=$TEST_PACKAGE_BASE_DIR/build
     if [ ! -d "$test_package_build_dir" ]; then
-	mkdir -p $test_package_build_dir
+        mkdir -p $test_package_build_dir
     fi
 
     local temp_file=perf_test.out
     $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 1> $temp_file 0>&2 2> /dev/null
 
     if [ -s $temp_file ]; then
-	perf_out_stream=1
+        perf_out_stream=1
     else
-	$perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 2> $temp_file 0>&1 1> /dev/null
-	if [ -s $temp_file ]; then
-	    perf_out_stream=2
-	else
-	    perf_out_stream=0
-	fi
+        $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 2> $temp_file 0>&1 1> /dev/null
+        if [ -s $temp_file ]; then
+            perf_out_stream=2
+        else
+            perf_out_stream=0
+        fi
     fi
     rm $temp_file
 
     echo "Data collection started"
-    echo -e "# Output file generated using $me \n" > $output_filename
+    echo -e "# Output file generated using $me \n#" > $output_filename
+
+    if [ ! -z "$event_list" ]; then
+        echo -e "# Events: $event_list\n" >> $output_filename
+    fi
+
 
     # Run each program with given constraints
     for program_name in $program_names; do
-	local program_dir=${pkgdir}/${program_parent_dir[$program_name]}/$program_name
-	local program_build_dir=${test_package_build_dir}/$program_name
-	local program_conf_dir=$program_dir/conf
+        local program_dir=${pkgdir}/${program_parent_dir[$program_name]}/$program_name
+        local program_build_dir=${test_package_build_dir}/$program_name
+        local program_conf_dir=$program_dir/conf
 
-	if [ ! -d $program_build_dir ]; then
-	    mkdir -p $program_build_dir
-	fi
+        if [ ! -d $program_build_dir ]; then
+            mkdir -p $program_build_dir
+        fi
 
-	# Copy src file to buid directory
-	cp -r ${program_dir}/src/* $program_build_dir
+        # Copy src file to buid directory
+        cp -r ${program_dir}/src/* $program_build_dir
 
-	# Read program versions supported
-	source $program_conf_dir/program.conf
-	BUILDDIR=$program_build_dir
+        # Read program versions supported
+        source $program_conf_dir/program.conf
+        BUILDDIR=$program_build_dir
 
-	# Preparing perf command
-	if [[ $action == "default" ]]; then
-	    perf_with_options="$perf_exec stat -x:"
-	elif [[ $action == "functional" ]]; then
-	    perf_with_options="$perf_exec record"
-	fi
+        # Preparing perf command
+        if [[ $action == "default" ]]; then
+            perf_with_options="$perf_exec stat -x:"
+        elif [[ $action == "functional" ]]; then
+            perf_with_options="$perf_exec record"
+        fi
 
-	if [ ! -z $event_list ]; then
-	    perf_with_options="${perf_with_options} -e $event_list"
-	fi
+        if [ ! -z "$event_list" ]; then
+            perf_with_options="${perf_with_options} -e $event_list"
+        fi
 
-	# Prepare input types
-	read_program_input_types $program_name
+        # Prepare input types
+        read_program_input_types $program_name
 
-	if [ ! -z $input_list ]; then
-	    filtered_input_list=""
+        if [ ! -z $input_list ]; then
+            filtered_input_list=""
 
-	    for input_t in $input_list; do
-		for program_input_type in $program_input_types; do
-		    if [ "$input_t" == "$program_input_type" ]; then
-			filtered_input_list="$filtered_input_list $input_t"
-		    fi
-		done
-	    done
-	else
-	    filtered_input_list=$program_input_types
-	fi
+            for input_t in $input_list; do
+                for program_input_type in $program_input_types; do
+                    if [ "$input_t" == "$program_input_type" ]; then
+                        filtered_input_list="$filtered_input_list $input_t"
+                    fi
+                done
+            done
+        else
+            filtered_input_list=$program_input_types
+        fi
 
-	for program_input_type in $filtered_input_list; do
-	    for thread_num in $thread_list; do
-		NTHREADS=$thread_num
-		for program_type in $program_types; do
-		    PROGVER=$program_type
-		    EXECNAME=${BUILDDIR}/${program_name}-${PROGVER}
+        for program_input_type in $filtered_input_list; do
+            for thread_num in $thread_list; do
+                NTHREADS=$thread_num
+                for program_type in $program_types; do
+                    PROGVER=$program_type
+                    EXECNAME=${BUILDDIR}/${program_name}-${PROGVER}
 
-		    source ${program_conf_dir}/${program_input_type}.buildconf
+                    source ${program_conf_dir}/${program_input_type}.buildconf
 
-		    echo -e "\n# Program:${program_name},Threads:${thread_num},Type:${program_type},Input:${program_input_type}" >> $output_filename
-		    $build_command
+                    echo -e "\n# Program:${program_name},Threads:${thread_num},Type:${program_type},Input:${program_input_type}" >> $output_filename
+                    $build_command
 
-		    if [[ $action == "default" ]]; then
-			perf_command="$perf_with_options $exec_command $perf_out_stream>> $output_filename > /dev/null"
-			eval $perf_command
-		    elif [[ $action == "functional" ]]; then
-			# perf_command="$perf_with_options $exec_command $perf_out_stream>&1 > /dev/null"
-			perf_command="$perf_with_options $exec_command > /dev/null $perf_out_stream>&1"
-			eval $perf_command
-			perf_command="$perf_exec report -t : >> $output_filename ${perf_out_stream}>&1"
-			eval $perf_command
-		    fi
-		done
-	    done
-	done
+                    if [[ $action == "default" ]]; then
+                        perf_command="$perf_with_options $exec_command $perf_out_stream>> $output_filename > /dev/null"
+                        eval $perf_command
+                    elif [[ $action == "functional" ]]; then
+                        # perf_command="$perf_with_options $exec_command $perf_out_stream>&1 > /dev/null"
+                        perf_command="$perf_with_options $exec_command > /dev/null $perf_out_stream>&1"
+                        eval $perf_command
+                        perf_command="$perf_exec report -t : >> $output_filename ${perf_out_stream}>&1"
+                        eval $perf_command
+                    fi
+                done
+            done
+        done
     done
 
     echo "Data collection finished"

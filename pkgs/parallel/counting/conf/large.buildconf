@@ -1,0 +1,4 @@
+
+build_command="$GCC -D${PROGVER} -DN=10000000 -DREPEAT=100 ${BUILDDIR}/counting.c -lpthread -lrt -o ${EXECNAME}"
+
+exec_command="${EXECNAME} $NTHREADS"
