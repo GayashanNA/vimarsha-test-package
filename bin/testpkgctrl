@@ -203,8 +203,6 @@ Options:
 
   -d		- show information for a given program or alias
 
-  -t TYPE	- A list of program types (good, badfs, badma)
-
   -n THREADS	- A list of thread numbers to be run with programs
 
   -e EVENTS     - List of events used with perf to collect data
@@ -230,7 +228,7 @@ Examples:
 
   $me -p swap -d
 
-  $me -p swap -n 2,4 -t good,badfs"
+  $me -p swap -n 2,4 -e r04b8,r02b8"
 
 # Default values used
 program_names="${pkg_alias[all]}"
