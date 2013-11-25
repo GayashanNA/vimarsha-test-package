@@ -1,33 +1,6 @@
 * testpkgctrl
-** File structure
-
-- pkgs
-  - falseshare
-    - counting
-      - src
-	- counting.c
-      - conf
-	- small.buildconf
-	- medium.buildconf
-	- large.buildconf
-	- program.conf - Include details about supported input types and
-	  program types
-
-    - psumscalar
-    - false1
-    - padding
-    - pmatrixcompare
-    - psumvector
-    - pdotproduct
-    - pmatrixmult
-
-  - sequential
-    - read
-    - write
-    - dotproduct
-    - matrixmultiply
-    - readmodifywrite
-    - swap
+** Usage
+testpkgctrl -p PACKAGE [OPTIONS]...
 
 ** Options
 + -p PACKAGE - A list of packages or aliases on which the action is to
@@ -62,11 +35,40 @@
 
 - testctrl -p swap -n 2,4 -e r04b8,r02b8
 
+** File structure
+
+- pkgs
+  - falseshare
+    - counting
+      - src
+	- counting.c
+      - conf
+	- small.buildconf
+	- medium.buildconf
+	- large.buildconf
+	- program.conf - Include details about supported input types and
+	  program types
+
+    - psumscalar
+    - false1
+    - padding
+    - pmatrixcompare
+    - psumvector
+    - pdotproduct
+    - pmatrixmult
+
+  - sequential
+    - read
+    - write
+    - dotproduct
+    - matrixmultiply
+    - readmodifywrite
+    - swap
+
 
 * vcollect
 ** Usage
-vcollect <options> command
-
+vcollect [OPTIONS]... command
 
 ** Options
 + -e EVENTS - List of events used with perf to collect data
@@ -81,7 +83,6 @@ vcollect <options> command
 
 + -h - Displays this help message
 
-
 ** Actions
 - default - Normal perf data collection
 - functional - use function wise perf data collection
@@ -91,4 +92,4 @@ vcollect ls -l
 
 vcollect -r 3 sleep 1
 
-vcollect -e r04b8.r02b8 ls
+vcollect -e r04b8,r02b8 ls
