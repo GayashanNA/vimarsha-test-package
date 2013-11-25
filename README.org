@@ -71,6 +71,8 @@ vcollect <options> command
 ** Options
 + -e EVENTS - List of events used with perf to collect data
 
++ -r REPEAT - Number of repetitions
+
 + -a ACTION - Data collections type
 
 + -o OUTPUT - Name of the output file
@@ -86,5 +88,7 @@ vcollect <options> command
 
 ** Examples
 vcollect ls -l
+
+vcollect -r 3 sleep 1
 
 vcollect -e r04b8.r02b8 ls

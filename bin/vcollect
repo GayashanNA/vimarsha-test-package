@@ -12,6 +12,10 @@ function check_event_list_valid {
     event_list=$1
 }
 
+function check_repeat_valid {
+    repeat=$1
+}
+
 function check_action_valid {
     t_action=$1
 
@@ -67,6 +71,7 @@ Examples:
 # Default values used
 event_list=""
 action="default"
+repeat=1
 perf_exec=perf
 output_filename="perf.out"
 
@@ -104,6 +109,15 @@ while [[ ! -z "$1" ]]; do
             fi
 
             check_event_list_valid $arg
+            ;;
+        "-r" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_repeat_valid $arg
             ;;
         "--perf-binary")
             shift; arg="$1"
@@ -167,7 +181,7 @@ function collect_data {
 
     # Preparing perf command
     if [[ $action == "default" ]]; then
-        perf_with_options="$perf_exec stat -x:"
+        perf_with_options="$perf_exec stat -r $repeat -x:"
     elif [[ $action == "functional" ]]; then
         perf_with_options="$perf_exec record"
     fi
