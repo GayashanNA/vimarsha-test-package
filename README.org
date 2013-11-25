@@ -1,4 +1,5 @@
-* File structure
+* testpkgctrl
+** File structure
 
 - pkgs
   - falseshare
@@ -28,7 +29,7 @@
     - readmodifywrite
     - swap
 
-* Options
+** Options
 + -p PACKAGE - A list of packages or aliases on which the action is to
   be performed.
 
@@ -48,11 +49,11 @@
 
 + -h - Displays this help message.
 
-* Actions
+** Actions
 - default - Normal perf data collection
 - functional - use function wise perf data collection
 
-* Examples
+** Examples
 - testctrl -p ALL -n 1,2,4,8
 
 - testctrl -p falseshare -n 1,2,4,8 -a functional
@@ -60,3 +61,26 @@
 - testctrl -p swap -d
 
 - testctrl -p swap -n 2,4 -e r04b8,r02b8
+
+
+* vcollect
+** Usage
+vcollect <options> command
+
+
+** Options
++ -e EVENTS     - List of events used with perf to collect data
+
++ -a ACTION - Data collections type
+
++ -o OUTPUT - Name of the output file
+
++ --perf-binary PERF_LOCATION - location of perf
+
++ -h - Displays this help message.
+
+
+** Actions
+- default - Normal perf data collection
+- functional - use function wise perf data collection
+
