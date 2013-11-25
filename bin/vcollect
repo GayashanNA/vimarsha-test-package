@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+
+# Globla declarations
+GCC=gcc
+
+function vcollect_init {
+    # Determine script name
+    me=$(basename $0)
+}
+
+function check_event_list_valid {
+    event_list=$1
+}
+
+function check_action_valid {
+    t_action=$1
+
+    if [[ "$t_action" == "default" || "$t_action" == "functional" ]]; then
+        action=$t_action
+    else
+        echo "ERROR: Invalid action (${t_action})"
+        echo "$usage"
+        exit 1
+    fi
+}
+
+function check_args_left {
+    arg="$1"
+    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+        echo "$usage"
+        exit 1
+    fi
+}
+
+function process_args {
+
+    # Usage
+    usage="\
+Usage $me <options> command
+
+Collect performance counter values for a given command using Linux perf
+
+Options:
++ -e EVENTS - List of events used with perf to collect data
+
++ -r REPEAT - Number of repetitions
+
++ -a ACTION - Data collections type
+
++ -o OUTPUT - Name of the output file
+
++ --perf-binary PERF_LOCATION - location of perf
+
++ -h - Displays this help message
+
+Actions:
+  default	- Normal perf data collection
+  functional	- use function wise perf data collection
+
+Examples:
+  $me ls -l
+
+  $me -r 3 sleep 1
+
+  $me -e r04b8.r02b8 ls"
+
+# Default values used
+event_list=""
+action="default"
+perf_exec=perf
+output_filename="perf.out"
+
+show_help=""
+
+while [[ ! -z "$1" ]]; do
+    arg="$1"
+    case "$arg" in
+        "-h" )
+            show_help=true
+            ;;
+        "-o" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            output_filename=$arg
+            ;;
+        "-a" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_action_valid $arg
+            ;;
+        "-e" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_event_list_valid $arg
+            ;;
+        "--perf-binary")
+            shift; arg="$1"
+            check_args_left $arg
+
+            if [ -f "$arg" ]; then
+                perf_exec=$arg
+            else
+                echo "Error no file at $arg"
+                exit 1
+            fi
+            ;;
+        * )
+            # Read remaining arguments as the command
+            exec_command=$@
+            shift $#
+            ;;
+    esac
+
+    shift
+done
+
+}
+
+function collect_data {
+    if [ $show_help ]; then
+        echo "$usage"
+        exit 1
+    fi
+
+    # Check perf binary is valid
+    which $perf_exec > /dev/null 2>&1
+    if [ "$?" -gt 0 ]; then
+        echo -e "ERROR: Perf location not detected\n"
+        echo "$usage"
+        exit 1
+    fi
+
+    local temp_file=perf_test.out
+    $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 1> $temp_file 0>&2 2> /dev/null
+
+    if [ -s $temp_file ]; then
+        perf_out_stream=1
+    else
+        $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 2> $temp_file 0>&1 1> /dev/null
+        if [ -s $temp_file ]; then
+            perf_out_stream=2
+        else
+            perf_out_stream=0
+        fi
+    fi
+    rm $temp_file
+
+    echo "Data collection started"
+    echo -e "# Output file generated using $me \n#" > $output_filename
+
+    if [ ! -z "$event_list" ]; then
+        echo -e "# Events: $event_list\n" >> $output_filename
+    fi
+
+
+    # Preparing perf command
+    if [[ $action == "default" ]]; then
+        perf_with_options="$perf_exec stat -x:"
+    elif [[ $action == "functional" ]]; then
+        perf_with_options="$perf_exec record"
+    fi
+
+    if [ ! -z "$event_list" ]; then
+        perf_with_options="${perf_with_options} -e $event_list"
+    fi
+
+    echo -e "\n# Command: $exec_command" >> $output_filename
+
+    if [[ $action == "default" ]]; then
+        perf_command="$perf_with_options $exec_command $perf_out_stream>> $output_filename > /dev/null"
+        eval $perf_command
+    elif [[ $action == "functional" ]]; then
+        perf_command="$perf_with_options $exec_command > /dev/null $perf_out_stream>&1"
+        eval $perf_command
+        perf_command="$perf_exec report -t : >> $output_filename ${perf_out_stream}>&1"
+        eval $perf_command
+    fi
+
+    echo "Data collection finished"
+}
+
+# Check Bash Version
+if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+  # We use certain Bash 4 features.
+  echo "Warning: At least bash version 4 is recommended. Current version is $BASH_VERSION."
+fi
+
+vcollect_init
+
+process_args $@
+
+collect_data

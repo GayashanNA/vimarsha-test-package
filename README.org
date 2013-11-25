@@ -69,7 +69,7 @@ vcollect <options> command
 
 
 ** Options
-+ -e EVENTS     - List of events used with perf to collect data
++ -e EVENTS - List of events used with perf to collect data
 
 + -a ACTION - Data collections type
 
@@ -77,10 +77,14 @@ vcollect <options> command
 
 + --perf-binary PERF_LOCATION - location of perf
 
-+ -h - Displays this help message.
++ -h - Displays this help message
 
 
 ** Actions
 - default - Normal perf data collection
 - functional - use function wise perf data collection
 
+** Examples
+vcollect ls -l
+
+vcollect -e r04b8.r02b8 ls
