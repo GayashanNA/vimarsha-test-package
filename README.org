@@ -99,4 +99,5 @@ vcollect [OPTIONS]... command
 ** Examples
 - vcollect ls -l
 - vcollect -r 3 sleep 1
-- vcollect -e r04b8,r02b8 ls
+- vcollect -c other -e r04b8,r02b8 ls
+- vcollect -c intel_nehalem sleep 5

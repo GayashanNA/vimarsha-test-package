@@ -278,7 +278,7 @@ function collect_data {
         eval $perf_command
     elif [[ $action == "functional" ]]; then
         # Print perf-report header
-        echo -e "@datafiletype=PERF_STAT\n" >> $output_filename
+        echo -e "@datafiletype=PERF_REPORT\n" >> $output_filename
 
         perf_command="$perf_with_options $exec_command > /dev/null $perf_out_stream>&1"
         eval $perf_command
