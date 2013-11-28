@@ -29,15 +29,12 @@ testpkgctrl -p PACKAGE [OPTIONS]...
 ** Processor Architectures:
 - INTEL_NEHALEM
 - POWER7
-- OTHER (*Default*)
+- OTHER *<-- (Default)*
 
 ** Examples
 - testctrl -p ALL -n 1,2,4,8
-
 - testctrl -p falseshare -n 1,2,4,8 -a functional
-
 - testctrl -p swap -d
-
 - testctrl -p swap -n 2,4 -e r04b8,r02b8
 
 ** File structure
@@ -97,9 +94,9 @@ vcollect [OPTIONS]... command
 ** Processor Architectures:
 - INTEL_NEHALEM
 - POWER7
-- OTHER (*Default*)
+- OTHER *<-- (Default)*
 
 ** Examples
-vcollect ls -l
-vcollect -r 3 sleep 1
-vcollect -e r04b8,r02b8 ls
+- vcollect ls -l
+- vcollect -r 3 sleep 1
+- vcollect -e r04b8,r02b8 ls
