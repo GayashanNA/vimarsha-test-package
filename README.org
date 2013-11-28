@@ -26,6 +26,11 @@ testpkgctrl -p PACKAGE [OPTIONS]...
 - default - Normal perf data collection
 - functional - use function wise perf data collection
 
+** Processor Architectures:
+- INTEL_NEHALEM
+- POWER7
+- OTHER (*Default*)
+
 ** Examples
 - testctrl -p ALL -n 1,2,4,8
 
@@ -41,13 +46,13 @@ testpkgctrl -p PACKAGE [OPTIONS]...
   - falseshare
     - counting
       - src
-	- counting.c
+        - counting.c
       - conf
-	- small.buildconf
-	- medium.buildconf
-	- large.buildconf
-	- program.conf - Include details about supported input types and
-	  program types
+        - small.buildconf
+        - medium.buildconf
+        - large.buildconf
+        - program.conf - Include details about supported input types and
+          program types
 
     - psumscalar
     - false1
@@ -89,10 +94,10 @@ vcollect [OPTIONS]... command
 - default - Normal perf data collection
 - functional - use function wise perf data collection
 
-** Processor Architectures (Default value - OTHER):
+** Processor Architectures:
 - INTEL_NEHALEM
 - POWER7
-- OTHER
+- OTHER (*Default*)
 
 ** Examples
 vcollect ls -l
