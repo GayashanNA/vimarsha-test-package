@@ -148,6 +148,12 @@ function collect_data {
         exit 1
     fi
 
+    # Check if command is not empty
+    if [ -z "$exec_command" ]; then
+        echo "$usage"
+        exit 1
+    fi
+
     # Check perf binary is valid
     which $perf_exec > /dev/null 2>&1
     if [ "$?" -gt 0 ]; then
@@ -193,9 +199,15 @@ function collect_data {
     echo -e "\n# Command: $exec_command" >> $output_filename
 
     if [[ $action == "default" ]]; then
+        # Print perf-stat header
+        echo -e "@datafiletype=PERF_STAT\n" >> $output_filename
+
         perf_command="$perf_with_options $exec_command $perf_out_stream>> $output_filename > /dev/null"
         eval $perf_command
     elif [[ $action == "functional" ]]; then
+        # Print perf-report header
+        echo -e "@datafiletype=PERF_STAT\n" >> $output_filename
+
         perf_command="$perf_with_options $exec_command > /dev/null $perf_out_stream>&1"
         eval $perf_command
         perf_command="$perf_exec report -t : >> $output_filename ${perf_out_stream}>&1"
