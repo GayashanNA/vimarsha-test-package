@@ -1,15 +1,58 @@
 #!/usr/bin/env bash
 
 # Globla declarations
+declare -A default_events
+
 GCC=gcc
 
 function vcollect_init {
     # Determine script name
     me=$(basename $0)
+
+    # Try to autodetect path by looking at path used to invoke this script
+    local uniquefile=".test_package_uniquefile"
+
+    if [ "${0:0:1}" == "/" ]; then
+        # Absolute path given
+        test_package_base_dir=$(dirname $(dirname $0))
+    else
+        # Relative path given
+        local script_absolute_path="$(pwd)/${0:1}"
+        test_package_base_dir=$(dirname $(dirname $script_absolute_path))
+    fi
+
+    # Check if correct directory is detected
+    if [ -f "${test_package_base_dir}/${uniquefile}" ]; then
+            TEST_PACKAGE_BASE_DIR=${test_package_base_dir}
+    fi
+
+    # Make sure TEST_PACKAGE_BASE_DIR is defined and exported
+    if [ -z "${TEST_PACKAGE_BASE_DIR}" ]; then
+        echo "Error: Unable to autodetect path to the test package directory "
+        exit 1
+    fi
+    export TEST_PACKAGE_BASE_DIR
+
+    configdir=${test_package_base_dir}/config
+    event_config_file=${configdir}/events.cfg
+
+    source $event_config_file
 }
 
 function check_event_list_valid {
     event_list=$1
+}
+
+function check_cpu_architecure_valid {
+    local t_architecture_name="${1^^}"
+
+    if ! [[ ${!default_events[@]} =~ (^| )$t_architecture_name($| ) ]]; then
+        echo -e "\nERROR: No default events for CPU Architecture '$t_architecture_name'"
+        echo "$usage"
+        exit 1
+    fi
+
+    processor_architecture=$t_architecture_name
 }
 
 function check_repeat_valid {
@@ -45,21 +88,28 @@ Usage $me <options> command
 Collect performance counter values for a given command using Linux perf
 
 Options:
-+ -e EVENTS - List of events used with perf to collect data
+  -e EVENTS - List of events used with perf to collect data
 
-+ -r REPEAT - Number of repetitions
+  -r REPEAT - Number of repetitions
 
-+ -a ACTION - Data collections type
+  -a ACTION - Data collections type
 
-+ -o OUTPUT - Name of the output file
+  -o OUTPUT - Name of the output file
 
-+ --perf-binary PERF_LOCATION - location of perf
+  -c CPU_ARCHITECTURE - processor architure used
 
-+ -h - Displays this help message
+  --perf-binary PERF_LOCATION - location of perf
+
+  -h - Displays this help message
 
 Actions:
   default	- Normal perf data collection
   functional	- use function wise perf data collection
+
+Processor Architectures (Default value - OTHER):
+  INTEL_NEHALEM
+  POWER7
+  OTHER
 
 Examples:
   $me ls -l
@@ -74,6 +124,7 @@ action="default"
 repeat=1
 perf_exec=perf
 output_filename="perf.out"
+processor_architecture="OTHER"
 
 show_help=""
 
@@ -119,6 +170,15 @@ while [[ ! -z "$1" ]]; do
 
             check_repeat_valid $arg
             ;;
+        "-c" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_cpu_architecure_valid $arg
+            ;;
         "--perf-binary")
             shift; arg="$1"
             check_args_left $arg
@@ -153,6 +213,18 @@ function collect_data {
         echo "$usage"
         exit 1
     fi
+
+    # Load event list
+    if [[ "$processor_architecture" == "OTHER" ]]; then
+        if [[ -z "$event_list" ]]; then
+            echo -e "\nERROR: Please enter some performance events or use -c CPU_ARCHITECTURE option\n"
+            echo "$usage"
+            exit 1
+        fi
+    else
+        event_list=${default_events["$processor_architecture"]}
+    fi
+
 
     # Check perf binary is valid
     which $perf_exec > /dev/null 2>&1

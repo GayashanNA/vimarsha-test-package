@@ -3,6 +3,7 @@
 # Globla declarations
 declare -A program_parent_dir
 declare -A pkg_alias
+declare -A default_events
 GCC=gcc
 
 function test_package_init {
@@ -58,6 +59,11 @@ function test_package_init {
         fi
     done
 
+    configdir=${test_package_base_dir}/config
+    event_config_file=${configdir}/events.cfg
+
+    source $event_config_file
+
 }
 
 function check_program_alias_valid {
@@ -100,6 +106,18 @@ function check_thread_list_valid {
 
 function check_event_list_valid {
     event_list=$1
+}
+
+function check_cpu_architecure_valid {
+    local t_architecture_name="${1^^}"
+
+    if ! [[ ${!default_events[@]} =~ (^| )$t_architecture_name($| ) ]]; then
+        echo -e "\nERROR: No default events for CPU Architecture '$t_architecture_name'"
+        echo "$usage"
+        exit 1
+    fi
+
+    processor_architecture=$t_architecture_name
 }
 
 function check_input_list_valid {
@@ -213,6 +231,8 @@ Options:
 
   -o OUTPUT	- Name of the output file
 
+  -c CPU_ARCHITECTURE - processor architure used
+
   --perf-binary PERF_LOCATION - location of perf
 
   -h		- Displays this help message.
@@ -220,6 +240,11 @@ Options:
 Actions:
   default	- Normal perf data collection
   functional	- use function wise perf data collection
+
+Processor Architectures (Default value - OTHER):
+  INTEL_NEHALEM
+  POWER7
+  OTHER
 
 Examples:
   $me -p all -n 1,2,4,8
@@ -239,6 +264,7 @@ event_list=""
 action="default"
 perf_exec=perf
 output_filename="perf.out"
+processor_architecture="OTHER"
 
 show_help=""
 show_list=""
@@ -301,6 +327,15 @@ while [[ ! -z "$1" ]]; do
 
             check_event_list_valid $arg
             ;;
+        "-c" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_cpu_architecure_valid $arg
+            ;;
         "-p" )
             shift; arg="$1"
             if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
@@ -346,6 +381,17 @@ function run_package {
     if [ $show_details ]; then
         show_program_details
         exit 1
+    fi
+
+    # Load event list
+    if [[ "$processor_architecture" == "OTHER" ]]; then
+        if [[ -z "$event_list" ]]; then
+            echo -e "\nERROR: Please enter some performance events or use -c CPU_ARCHITECTURE option\n"
+            echo "$usage"
+            exit 1
+        fi
+    else
+        event_list=${default_events["$processor_architecture"]}
     fi
 
     # Check perf binary is valid

@@ -79,6 +79,8 @@ vcollect [OPTIONS]... command
 
 + -o OUTPUT - Name of the output file
 
++ -c CPU_ARCHITECTURE - processor architure used
+
 + --perf-binary PERF_LOCATION - location of perf
 
 + -h - Displays this help message
@@ -87,9 +89,12 @@ vcollect [OPTIONS]... command
 - default - Normal perf data collection
 - functional - use function wise perf data collection
 
+** Processor Architectures (Default value - OTHER):
+- INTEL_NEHALEM
+- POWER7
+- OTHER
+
 ** Examples
 vcollect ls -l
-
 vcollect -r 3 sleep 1
-
 vcollect -e r04b8,r02b8 ls
