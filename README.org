@@ -10,13 +10,15 @@ testpkgctrl -p PACKAGE [OPTIONS]...
 
 + -d - show information for a given program or alias
 
++ -c CPU_ARCHITECTURE - processor architure used
+
++ -e EVENTS  - List of events used with perf to collect data
+
 + -n THREADS - A list of thread numbers to be run with programs
 
-+ -e EVENTS     - List of events used with perf to collect data
++ -a ACTION  - Data collections type
 
-+ -a ACTION - Data collections type
-
-+ -o OUTPUT - Name of the output file
++ -o OUTPUT  - Name of the output file
 
 + --perf-binary PERF_LOCATION - location of perf
 
@@ -97,7 +99,7 @@ vcollect [OPTIONS]... command
 - OTHER *<-- (Default)*
 
 ** Examples
-- vcollect ls -l
-- vcollect -r 3 sleep 1
-- vcollect -c other -e r04b8,r02b8 ls
-- vcollect -c intel_nehalem sleep 5
++ vcollect -c intel_nehalem sleep 5
++ vcollect -c intel_nehalem -r 3 sleep 1
++ vcollect -e r04b8,r02b8 ls
+

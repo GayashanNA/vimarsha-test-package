@@ -46,7 +46,8 @@ function check_event_list_valid {
 function check_cpu_architecure_valid {
     local t_architecture_name="${1^^}"
 
-    if ! [[ ${!default_events[@]} =~ (^| )$t_architecture_name($| ) ]]; then
+    if ! [[ ${!default_events[@]} =~ (^| )$t_architecture_name($| )
+                || $t_architecture_name == "OTHER" ]]; then
         echo -e "\nERROR: No default events for CPU Architecture '$t_architecture_name'"
         echo "$usage"
         exit 1
@@ -88,6 +89,8 @@ Usage $me <options> command
 Collect performance counter values for a given command using Linux perf
 
 Options:
+  -c CPU_ARCHITECTURE - processor architure used
+
   -e EVENTS - List of events used with perf to collect data
 
   -r REPEAT - Number of repetitions
@@ -95,8 +98,6 @@ Options:
   -a ACTION - Data collections type
 
   -o OUTPUT - Name of the output file
-
-  -c CPU_ARCHITECTURE - processor architure used
 
   --perf-binary PERF_LOCATION - location of perf
 
@@ -112,11 +113,13 @@ Processor Architectures (Default value - OTHER):
   OTHER
 
 Examples:
-  $me ls -l
 
-  $me -r 3 sleep 1
+  $me -c intel_nehalem sleep 5
 
-  $me -e r04b8.r02b8 ls"
+  $me -c intel_nehalem -r 3 sleep 1
+
+  $me -e r04b8,r02b8 ls
+"
 
 # Default values used
 event_list=""
@@ -186,7 +189,7 @@ while [[ ! -z "$1" ]]; do
             if [ -f "$arg" ]; then
                 perf_exec=$arg
             else
-                echo "Error no file at $arg"
+                echo "Error perf not in $arg"
                 exit 1
             fi
             ;;
