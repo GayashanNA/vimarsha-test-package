@@ -108,10 +108,15 @@ function check_event_list_valid {
     event_list=$1
 }
 
+function check_perf_stream_valid {
+    perf_out_stream=$1
+}
+
 function check_cpu_architecure_valid {
     local t_architecture_name="${1^^}"
 
-    if ! [[ ${!default_events[@]} =~ (^| )$t_architecture_name($| ) ]]; then
+    if ! [[ ${!default_events[@]} =~ (^| )$t_architecture_name($| )
+                || $t_architecture_name == "OTHER" ]]; then
         echo -e "\nERROR: No default events for CPU Architecture '$t_architecture_name'"
         echo "$usage"
         exit 1
@@ -235,6 +240,8 @@ Options:
 
   --perf-binary PERF_LOCATION - location of perf
 
+  -s PERF_OUT_STREAM - perf output stream number
+
   -h		- Displays this help message.
 
 Actions:
@@ -265,6 +272,7 @@ action="default"
 perf_exec=perf
 output_filename="perf.out"
 processor_architecture="OTHER"
+perf_out_stream=""
 
 show_help=""
 show_list=""
@@ -335,6 +343,15 @@ while [[ ! -z "$1" ]]; do
             fi
 
             check_cpu_architecure_valid $arg
+            ;;
+        "-s" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_perf_stream_valid $arg
             ;;
         "-p" )
             shift; arg="$1"
@@ -407,20 +424,19 @@ function run_package {
         mkdir -p $test_package_build_dir
     fi
 
-    local temp_file=perf_test.out
-    $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 1> $temp_file 0>&2 2> /dev/null
+    # Try to auto detect perf out stream if not specified
+    if [ -z "$perf_out_stream" ]; then
 
-    if [ -s $temp_file ]; then
-        perf_out_stream=1
-    else
-        $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 2> $temp_file 0>&1 1> /dev/null
+        local temp_file=perf_test.out
+        $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 1> $temp_file 0>&2 2> /dev/null
+
         if [ -s $temp_file ]; then
-            perf_out_stream=2
+            perf_out_stream=1
         else
-            perf_out_stream=0
+            perf_out_stream=2
         fi
+        rm $temp_file
     fi
-    rm $temp_file
 
     echo "Data collection started"
     echo -e "# Output file generated using $me \n#" > $output_filename
@@ -461,7 +477,7 @@ function run_package {
         # Prepare input types
         read_program_input_types $program_name
 
-        if [ ! -z $input_list ]; then
+        if [ ! -z "$input_list" ]; then
             filtered_input_list=""
 
             for input_t in $input_list; do

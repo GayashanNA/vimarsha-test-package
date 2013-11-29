@@ -22,6 +22,8 @@ testpkgctrl -p PACKAGE [OPTIONS]...
 
 + --perf-binary PERF_LOCATION - location of perf
 
++ -s PERF_OUT_STREAM - perf output stream number
+
 + -h - Displays this help message.
 
 ** Actions
@@ -86,6 +88,8 @@ vcollect [OPTIONS]... command
 + -c CPU_ARCHITECTURE - processor architure used
 
 + --perf-binary PERF_LOCATION - location of perf
+
++ -s PERF_OUT_STREAM - perf output stream number
 
 + -h - Displays this help message
 
