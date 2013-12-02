@@ -54,7 +54,7 @@ function vcollect_init {
     export TEST_PACKAGE_BASE_DIR
 
     configdir=${test_package_base_dir}/config
-    event_config_file=${configdir}/events.cfg
+    event_config_file=${configdir}/time_events.cfg
 
     source $event_config_file
 }
@@ -65,6 +65,10 @@ function check_event_list_valid {
 
 function check_time_period_valid {
     time_period=$1
+}
+
+function check_instances_valid {
+    instances=$1
 }
 
 function check_cpu_architecure_valid {
@@ -110,6 +114,8 @@ Options:
 
   -t TIME - data collection time period for one instance
 
+  -n INSTANCES - number of data samples (Default: 1000)
+
   -h - Displays this help message
 
 Processor Architectures (Default value - OTHER):
@@ -132,6 +138,7 @@ perf_exec=perf
 output_filename="perf.out"
 processor_architecture="OTHER"
 time_period=0.01
+instances=1000
 
 show_help=""
 
@@ -177,6 +184,15 @@ while [[ ! -z "$1" ]]; do
 
             check_time_period_valid $arg
             ;;
+        "-n" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_instances_valid $arg
+            ;;
          "--perf-binary")
             shift; arg="$1"
             check_args_left $arg
@@ -213,15 +229,9 @@ function collect_data {
         exit 1
     fi
 
-    # Check if command is not empty
+    # Check if PID is not empty
     if [ -z "$program_pid" ]; then
-        echo -e "\nPLease proveide a PID.\n"
-        echo "$usage"
-        exit 1
-    fi
-
-    # Check if command is not empty
-    if [ -z "$program_pid" ]; then
+        echo -e "\nPLease provide a PID.\n"
         echo "$usage"
         exit 1
     fi
@@ -267,7 +277,11 @@ function collect_data {
 
     perf_command="$perf_with_options $exec_command -o ${output_filename}_t sleep $time_period > /dev/null 2>&1"
 
-    while test -d /proc/$program_pid; do
+    for (( c=1; c<=$instances; c++ ));do
+
+        if [ ! -d /proc/$program_pid ]; then
+            break
+        fi
 
         eval $perf_command
 
