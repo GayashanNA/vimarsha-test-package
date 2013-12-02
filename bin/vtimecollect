@@ -1,0 +1,288 @@
+#!/usr/bin/env bash
+
+#########################################################################
+#                                                                       #
+# vimarsha, Performance analysis: Machine Learning Approach             #
+# Copyright (C) 2013 vimarsha                                           #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                       #
+#########################################################################
+
+# Globla declarations
+declare -A default_events
+
+GCC=gcc
+
+function vcollect_init {
+    # Determine script name
+    me=$(basename $0)
+
+    # Try to autodetect path by looking at path used to invoke this script
+    local uniquefile=".test_package_uniquefile"
+
+    if [ "${0:0:1}" == "/" ]; then
+        # Absolute path given
+        test_package_base_dir=$(dirname $(dirname $0))
+    else
+        # Relative path given
+        local script_absolute_path="$(pwd)/${0:1}"
+        test_package_base_dir=$(dirname $(dirname $script_absolute_path))
+    fi
+
+    # Check if correct directory is detected
+    if [ -f "${test_package_base_dir}/${uniquefile}" ]; then
+            TEST_PACKAGE_BASE_DIR=${test_package_base_dir}
+    fi
+
+    # Make sure TEST_PACKAGE_BASE_DIR is defined and exported
+    if [ -z "${TEST_PACKAGE_BASE_DIR}" ]; then
+        echo "Error: Unable to autodetect path to the test package directory "
+        exit 1
+    fi
+    export TEST_PACKAGE_BASE_DIR
+
+    configdir=${test_package_base_dir}/config
+    event_config_file=${configdir}/events.cfg
+
+    source $event_config_file
+}
+
+function check_event_list_valid {
+    event_list=$1
+}
+
+function check_time_period_valid {
+    time_period=$1
+}
+
+function check_cpu_architecure_valid {
+    local t_architecture_name="${1^^}"
+
+    if ! [[ ${!default_events[@]} =~ (^| )$t_architecture_name($| )
+                || $t_architecture_name == "OTHER" ]]; then
+        echo -e "\nERROR: No default events for CPU Architecture '$t_architecture_name'"
+        echo "$usage"
+        exit 1
+    fi
+
+    processor_architecture=$t_architecture_name
+}
+
+
+function check_args_left {
+    arg="$1"
+    if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+        echo "$usage"
+        exit 1
+    fi
+}
+
+function process_args {
+
+    # Usage
+    usage="\
+Usage $me <options> PID
+
+Collect performance counter values periodically for a given command
+using Linux perf. This tool will collect data until the test program
+is killed.
+
+Options:
+  -c CPU_ARCHITECTURE - processor architure used
+
+  -e EVENTS - List of events used with perf to collect data
+
+  -o OUTPUT - Name of the output file
+
+  --perf-binary PERF_LOCATION - location of perf
+
+  -t TIME - data collection time period for one instance
+
+  -h - Displays this help message
+
+Processor Architectures (Default value - OTHER):
+  INTEL_NEHALEM
+  POWER7
+  OTHER
+
+Examples:
+"
+
+# Default values used
+event_list=""
+perf_exec=perf
+output_filename="perf.out"
+processor_architecture="OTHER"
+time_period=1
+
+show_help=""
+
+while [[ ! -z "$1" ]]; do
+    arg="$1"
+    case "$arg" in
+        "-h" )
+            show_help=true
+            ;;
+        "-o" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            output_filename=$arg
+            ;;
+        "-e" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_event_list_valid $arg
+            ;;
+        "-c" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_cpu_architecure_valid $arg
+            ;;
+        "-t" )
+            shift; arg="$1"
+            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
+                echo "$usage"
+                exit 1
+            fi
+
+            check_time_period_valid $arg
+            ;;
+         "--perf-binary")
+            shift; arg="$1"
+            check_args_left $arg
+
+            if [ -f "$arg" ]; then
+                perf_exec=$arg
+            else
+                echo "Error perf not in $arg"
+                exit 1
+            fi
+            ;;
+        * )
+            if [[ "$arg" =~ ^- ]]; then
+                echo -e "\nERROR: Invalid option ${arg}\n"
+
+                echo "$usage"
+                exit 1
+            fi
+
+            # Read remaining arguments as the command
+            program_pid=$@
+            shift $#
+            ;;
+    esac
+
+    shift
+done
+
+}
+
+function collect_data {
+    if [ $show_help ]; then
+        echo "$usage"
+        exit 1
+    fi
+
+    # Check if command is not empty
+    if [ -z "$program_pid" ]; then
+        echo -e "\nPLease proveide a PID.\n"
+        echo "$usage"
+        exit 1
+    fi
+
+    # Check if command is not empty
+    if [ -z "$program_pid" ]; then
+        echo "$usage"
+        exit 1
+    fi
+
+    # Load event list
+    if [[ "$processor_architecture" == "OTHER" ]]; then
+        if [[ -z "$event_list" ]]; then
+            echo -e "\nERROR: Please enter some performance events or use -c CPU_ARCHITECTURE option\n"
+            echo "$usage"
+            exit 1
+        fi
+    else
+        event_list=${default_events["$processor_architecture"]}
+    fi
+
+
+    # Check perf binary is valid
+    which $perf_exec > /dev/null 2>&1
+    if [ "$?" -gt 0 ]; then
+        echo -e "ERROR: Perf location not detected\n"
+        echo "$usage"
+        exit 1
+    fi
+
+    echo "Data collection started"
+    echo -e "# Output file generated using $me \n#" > $output_filename
+
+    if [ ! -z "$event_list" ]; then
+        echo -e "# Events: $event_list\n" >> $output_filename
+    fi
+
+    # Preparing perf command
+    perf_with_options="$perf_exec stat -x: -p $program_pid"
+
+    if [ ! -z "$event_list" ]; then
+        perf_with_options="${perf_with_options} -e $event_list"
+    fi
+
+    echo -e "\n# PID: $program_pid" >> $output_filename
+
+    # Print perf-stat header
+    echo -e "@datafiletype=PERF_STAT_TIME\n" >> $output_filename
+
+    perf_command="$perf_with_options $exec_command -o ${output_filename}_t sleep $time_period > /dev/null 2>&1"
+
+    while test -d /proc/$program_pid; do
+
+        eval $perf_command
+
+        cat ${output_filename}_t >> $output_filename 2> /dev/null
+        rm ${output_filename}_t > /dev/null 2>&1
+
+        echo >> $output_filename
+
+    done
+
+    echo "Data collection finished"
+}
+
+# Check Bash Version
+if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+  # We use certain Bash 4 features.
+  echo "Warning: At least bash version 4 is recommended. Current version is $BASH_VERSION."
+fi
+
+vcollect_init
+
+process_args $@
+
+collect_data
