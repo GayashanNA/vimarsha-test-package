@@ -275,7 +275,7 @@ function collect_data {
     # Print perf-stat header
     echo -e "@datafiletype=PERF_STAT_TIME\n" >> $output_filename
 
-    perf_command="$perf_with_options $exec_command -o ${output_filename}_t sleep $time_period > /dev/null 2>&1"
+    perf_command="$perf_with_options -o ${output_filename}_t sleep $time_period > /dev/null 2>&1"
 
     for (( c=1; c<=$instances; c++ ));do
 
