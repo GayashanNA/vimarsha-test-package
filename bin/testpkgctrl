@@ -128,10 +128,6 @@ function check_event_list_valid {
     event_list=$1
 }
 
-function check_perf_stream_valid {
-    perf_out_stream=$1
-}
-
 function check_cpu_architecure_valid {
     local t_architecture_name="${1^^}"
 
@@ -260,8 +256,6 @@ Options:
 
   --perf-binary PERF_LOCATION - location of perf
 
-  -s PERF_OUT_STREAM - perf output stream number
-
   -h		- Displays this help message.
 
 Actions:
@@ -292,7 +286,6 @@ action="default"
 perf_exec=perf
 output_filename="perf.out"
 processor_architecture="OTHER"
-perf_out_stream=""
 
 show_help=""
 show_list=""
@@ -363,15 +356,6 @@ while [[ ! -z "$1" ]]; do
             fi
 
             check_cpu_architecure_valid $arg
-            ;;
-        "-s" )
-            shift; arg="$1"
-            if [[ -z "$arg" ]] || [[ "$arg" =~ ^- ]]; then
-                echo "$usage"
-                exit 1
-            fi
-
-            check_perf_stream_valid $arg
             ;;
         "-p" )
             shift; arg="$1"
@@ -444,20 +428,6 @@ function run_package {
         mkdir -p $test_package_build_dir
     fi
 
-    # Try to auto detect perf out stream if not specified
-    if [ -z "$perf_out_stream" ]; then
-
-        local temp_file=perf_test.out
-        $perf_exec stat -e cycles dd if=/dev/zero of=/dev/null count=100 1> $temp_file 0>&2 2> /dev/null
-
-        if [ -s $temp_file ]; then
-            perf_out_stream=1
-        else
-            perf_out_stream=2
-        fi
-        rm $temp_file
-    fi
-
     echo "Data collection started"
     echo -e "# Output file generated using $me \n#" > $output_filename
 
@@ -521,16 +491,19 @@ function run_package {
                     source ${program_conf_dir}/${program_input_type}.buildconf
 
                     echo -e "\n# Program:${program_name},Threads:${thread_num},Type:${program_type},Input:${program_input_type}" >> $output_filename
-                    $build_command
+                    $build_command 2> /dev/null
 
                     if [[ $action == "default" ]]; then
-                        perf_command="$perf_with_options $exec_command $perf_out_stream>> $output_filename > /dev/null"
+                        perf_command="$perf_with_options -o ${output_filename}_t $exec_command > /dev/null"
                         eval $perf_command
+
+                        cat ${output_filename}_t >> $output_filename 2> /dev/null
+                        rm ${output_filename}_t > /dev/null 2>&1
+
                     elif [[ $action == "functional" ]]; then
-                        # perf_command="$perf_with_options $exec_command $perf_out_stream>&1 > /dev/null"
-                        perf_command="$perf_with_options $exec_command > /dev/null $perf_out_stream>&1"
+                        perf_command="$perf_with_options $exec_command > /dev/null 2>&1"
                         eval $perf_command
-                        perf_command="$perf_exec report -t : >> $output_filename ${perf_out_stream}>&1"
+                        perf_command="$perf_exec report -t : >> $output_filename 2>&1"
                         eval $perf_command
                     fi
                 done
