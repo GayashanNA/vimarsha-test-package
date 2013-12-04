@@ -25,6 +25,8 @@ declare -A default_events
 
 GCC=gcc
 
+vcollect_version={{VERSION}}
+
 function vcollect_init {
     # Determine script name
     me=$(basename $0)
@@ -100,8 +102,7 @@ function process_args {
 Usage $me <options> PID
 
 Collect performance counter values periodically for a given command
-using Linux perf. This tool will collect data until the test program
-is killed.
+using Linux perf.
 
 Options:
   -c CPU_ARCHITECTURE - processor architure used
@@ -257,7 +258,7 @@ function collect_data {
     fi
 
     echo "Data collection started"
-    echo -e "# Output file generated using $me \n#" > $output_filename
+    echo -e "# Output file generated using $me $vcollect_version\n#" > $output_filename
 
     if [ ! -z "$event_list" ]; then
         echo -e "# Events: $event_list\n" >> $output_filename

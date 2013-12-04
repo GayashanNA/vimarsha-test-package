@@ -25,6 +25,8 @@ declare -A default_events
 
 GCC=gcc
 
+vcollect_version={{VERSION}}
+
 function vcollect_init {
     # Determine script name
     me=$(basename $0)
@@ -265,7 +267,7 @@ function collect_data {
     fi
 
     echo "Data collection started ..."
-    echo -e "# Output file generated using $me \n#" > $output_filename
+    echo -e "# Output file generated using $me $vcollect_version \n#" > $output_filename
 
     if [ ! -z "$event_list" ]; then
         echo -e "# Events: $event_list\n" >> $output_filename

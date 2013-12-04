@@ -26,6 +26,8 @@ declare -A pkg_alias
 declare -A default_events
 GCC=gcc
 
+test_package_version={{VERSION}}
+
 function test_package_init {
     # Determine script name
     me=$(basename $0)
@@ -429,7 +431,7 @@ function run_package {
     fi
 
     echo "Data collection started"
-    echo -e "# Output file generated using $me \n#" > $output_filename
+    echo -e "# Output file generated using $me $test_package_version\n#" > $output_filename
 
     if [ ! -z "$event_list" ]; then
         echo -e "# Events: $event_list\n" >> $output_filename
