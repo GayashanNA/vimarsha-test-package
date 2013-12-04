@@ -268,11 +268,11 @@ Processor Architectures (Default value - OTHER):
   OTHER
 
 Examples:
-  $me -p all -n 1,2,4,8
+  $me -c intel_nehalem -p all -n 1,2,4,8
 
-  $me -p falseshare -n 1,2,4,8 -a functional
+  $me -c power7 -p falseshare -n 1,2,4,8 -a functional
 
-  $me -p swap -d
+  $me -c intel_nehalem -p swap -d
 
   $me -p swap -n 2,4 -e r04b8,r02b8"
 

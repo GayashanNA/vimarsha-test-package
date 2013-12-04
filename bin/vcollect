@@ -264,7 +264,7 @@ function collect_data {
         exit 1
     fi
 
-    echo "Data collection started"
+    echo "Data collection started ..."
     echo -e "# Output file generated using $me \n#" > $output_filename
 
     if [ ! -z "$event_list" ]; then
@@ -289,8 +289,10 @@ function collect_data {
         # Print perf-stat header
         echo -e "@datafiletype=PERF_STAT\n" >> $output_filename
 
-        perf_command="$perf_with_options -o ${output_filename}_t $exec_command > /dev/null"
+        perf_command="$perf_with_options -o ${output_filename}_t $exec_command"
+        echo -e " \n============== Start Program Output ==============\n"
         eval $perf_command
+        echo -e " \n============== End Program Output ==============\n"
 
         cat ${output_filename}_t >> $output_filename 2> /dev/null
         rm ${output_filename}_t > /dev/null 2>&1
@@ -299,9 +301,13 @@ function collect_data {
         # Print perf-report header
         echo -e "@datafiletype=PERF_REPORT\n" >> $output_filename
 
-        perf_command="$perf_with_options $exec_command > /dev/null 2>&1"
+        perf_command="$perf_with_options $exec_command"
+
+        echo -e " \n============== Start Program Output ==============\n"
         eval $perf_command
-        perf_command="$perf_exec report -t : >> $output_filename"
+        echo -e " \n============== End Program Output ==============\n"
+
+        perf_command="$perf_exec report -t : >> $output_filename 2> /dev/null"
         eval $perf_command
 
         rm perf.data > /dev/null 2>&1
