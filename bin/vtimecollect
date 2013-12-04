@@ -25,7 +25,7 @@ declare -A default_events
 
 GCC=gcc
 
-vcollect_version={{VERSION}}
+vcollect_version="0.2.4"
 
 function vcollect_init {
     # Determine script name
