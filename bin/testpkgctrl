@@ -503,8 +503,10 @@ function run_package {
                     elif [[ $action == "functional" ]]; then
                         perf_command="$perf_with_options $exec_command > /dev/null 2>&1"
                         eval $perf_command
-                        perf_command="$perf_exec report -t : >> $output_filename 2>&1"
+                        perf_command="$perf_exec report -t : >> $output_filename"
                         eval $perf_command
+
+                        rm perf.data > /dev/null 2>&1
                     fi
                 done
             done
