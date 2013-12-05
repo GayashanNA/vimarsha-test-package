@@ -266,8 +266,17 @@ function collect_data {
         exit 1
     fi
 
+    # Starting Data Collection
     echo "Data collection started ..."
-    echo -e "# Output file generated using $me $vcollect_version \n#" > $output_filename
+
+    # Print perf-stat header
+    if [[ $action == "default" ]]; then
+        echo -e "@datafiletype=PERF_STAT\n" > $output_filename
+    elif [[ $action == "functional" ]]; then
+        echo -e "@datafiletype=PERF_REPORT\n" > $output_filename
+    fi
+
+    echo -e "# Output file generated using $me $vcollect_version \n#" >> $output_filename
 
     if [ ! -z "$event_list" ]; then
         echo -e "# Events: $event_list\n" >> $output_filename
@@ -288,8 +297,6 @@ function collect_data {
     echo -e "\n# Command: $exec_command" >> $output_filename
 
     if [[ $action == "default" ]]; then
-        # Print perf-stat header
-        echo -e "@datafiletype=PERF_STAT\n" >> $output_filename
 
         perf_command="$perf_with_options -o ${output_filename}_t $exec_command"
         echo -e " \n============== Start Program Output ==============\n"
@@ -300,8 +307,6 @@ function collect_data {
         rm ${output_filename}_t > /dev/null 2>&1
 
     elif [[ $action == "functional" ]]; then
-        # Print perf-report header
-        echo -e "@datafiletype=PERF_REPORT\n" >> $output_filename
 
         perf_command="$perf_with_options $exec_command"
 
