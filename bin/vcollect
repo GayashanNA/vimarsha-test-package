@@ -271,15 +271,15 @@ function collect_data {
 
     # Print perf-stat header
     if [[ $action == "default" ]]; then
-        echo -e "@datafiletype=PERF_STAT\n" > $output_filename
+        echo -e "@datafiletype=PERF_STAT\n#" > $output_filename
     elif [[ $action == "functional" ]]; then
-        echo -e "@datafiletype=PERF_REPORT\n" > $output_filename
+        echo -e "@datafiletype=PERF_REPORT\n#" > $output_filename
     fi
 
-    echo -e "# Output file generated using $me $vcollect_version \n#" >> $output_filename
+    echo -e "# Output file generated using $me $vcollect_version\n#" >> $output_filename
 
     if [ ! -z "$event_list" ]; then
-        echo -e "# Events: $event_list\n" >> $output_filename
+        echo -e "# Event(s): $event_list\n#" >> $output_filename
     fi
 
 

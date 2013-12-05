@@ -261,11 +261,11 @@ function collect_data {
     echo "Data collection started"
 
     # Print perf-stat header
-    echo -e "@datafiletype=PERF_STAT_TIME\n" > $output_filename
+    echo -e "@datafiletype=PERF_STAT_TIME\n#" > $output_filename
     echo -e "# Output file generated using $me $vcollect_version\n#" >> $output_filename
 
     if [ ! -z "$event_list" ]; then
-        echo -e "# Events: $event_list\n" >> $output_filename
+        echo -e "# Event(s): $event_list\n#" >> $output_filename
     fi
 
     # Preparing perf command
@@ -275,7 +275,7 @@ function collect_data {
         perf_with_options="${perf_with_options} -e $event_list"
     fi
 
-    echo -e "\n# PID: $program_pid" >> $output_filename
+    echo -e "#\n# PID: $program_pid" >> $output_filename
 
     perf_command="$perf_with_options -o ${output_filename}_t sleep $time_period > /dev/null 2>&1"
 
