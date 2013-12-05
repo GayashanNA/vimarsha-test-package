@@ -294,7 +294,7 @@ function collect_data {
         perf_with_options="${perf_with_options} -e $event_list"
     fi
 
-    echo -e "\n# Command: $exec_command" >> $output_filename
+    echo -e "#\n# Command: $exec_command" >> $output_filename
 
     if [[ $action == "default" ]]; then
 
